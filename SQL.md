@@ -330,3 +330,116 @@ FOREIGN KEY(client_id) REFERENCES client(client_id) ON DELETE CASCADE
 - When we start adding data, if the data we are referencing via the foreign key is still not added yet, we should set it to Null and then we alter the table after we update the other table.
 
 ---
+
+## More Basic Queries
+
+You can select columns but named differently, so for example, you might want to select the first name as the forename and the last name as the surname, and you can do that using the AS keyword:
+
+```sql
+SELECT first_name AS forename, last_name AS surname
+FROM employee;
+```
+
+The resulting table will have its columns named as we specified.
+
+You can select all distinct values of an attribute, for example, we have male (M) or female (F) as the only values for the sec attribute, we can do that using the DISTINCT keyword:
+
+```sql
+SELECT DISTINCT sex
+FROM employee;
+```
+
+This also applies to foreign keys too.
+
+---
+
+## Functions
+
+For example, to get the number of employees in the employee tables, we can use the built in function COUNT:
+
+```sql
+SELECT COUNT(emp_id)
+FROM employee;
+```
+
+This will give us 9.
+
+If you for example put super_id instead of emp_id it will return 8 since one of them has the super_id as NULL which is David Wallace. So it actually counts the entries that has a value corresponding to that column or attribute.
+
+Example: count the number of female employees who were born after 1970:
+
+```sql
+SELECT COUNT(emp_id) 
+FROM employee
+WHERE sec = 'F' AND birth_date > '1970-01-01';
+```
+
+Example: find the average of all employee’s salaries:
+
+```sql
+SELECT AVG(salary)
+FROM employee
+```
+
+To find the avg for only male employees we can add a condition:
+
+`WHERE sex  = ‘M’`
+
+Example: find the sum of all employee’s salaries:
+
+```sql
+SELECT SUM(salary)
+FROM employee;
+```
+
+Example: find out how many males and females there are:
+
+```sql
+SELECT COUNT(sex), sex
+FROM employee
+GROUP BY sex;
+```
+
+The result will look like this:
+
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/4eb3df65-d3f8-46d9-9dfd-3f3a35508661/Untitled.png)
+
+Example: find the total sales of each salesman:
+
+```sql
+SELECT SUM(total_sales), emp_id 
+FROM works_with
+GROUP BY emp_id;
+```
+
+---
+
+## Wildcards
+
+A way for defining different patterns that we want to match a specific piece of data to, and we use LIKE.
+
+Note that we have % = which matches any number of characters, and _ = for only one character.
+
+Example: find any client who are an LLC
+
+```sql
+SELECT *
+FROM client 
+WHERE client_name LIKE '%LLC';
+```
+
+Note that this is similar to regular expressions, but more simplified.
+
+If you add another % at the end, this means that this word should be included within that value.
+
+Example: find any employee born in October:
+
+```sql
+SELECT *
+FROM employee 
+WHERE birth_date LIKE '____-10%';
+```
+
+The under score will match with any single character until we reach the month which should be 10 or October.
+
+---
