@@ -181,3 +181,152 @@ major VARCHAR(20) DEFAULT 'undecided',
 ```
 
 Note that so far we have been incrementing the student ids manually when adding them, but we can make SQL do that for us by using AUTO_INCREMENT: `student_id INT AUTO_INCREMENT` so now we can just ignore adding student id.
+
+---
+
+## Update and Delete
+
+Starting with the table we had before, to update the major for example, where the major is ‘Bio” you can do the following:
+
+```sql
+UPDATE student
+SET major = 'Bio'
+WHERE major = 'Biology'
+```
+
+So we start by selecting or setting the attribute that we want to choose based on, then we set the attribute we want.
+
+We can select other types of attributes, as we also can select other types of comparison operators like ≤ ≥, <, > and so on.
+
+Criteria can get a bit more complex based on what you want:
+
+```sql
+UPDATE student
+SET major = 'Biochemistry'
+WHERE major = 'Bio' OR major = 'Chemistry';
+```
+
+You can also set more than one attribute as well:
+
+```sql
+UPDATE student
+SET name = 'Tom', major = 'undecided'
+WHERE student_id = 1;
+```
+
+If you omit the WHERE keyword, then the update will affect every single entry in the table.
+
+The same applies to DELETE, if you just type something like the following, it will just delete all the rows from the selected table: 
+
+`DELETE FROM student;`
+
+But to delete a specific row:
+
+```sql
+DELETE FROM student
+WHERE student_id = 5;
+```
+
+```sql
+DELETE FROM student
+WHERE name = 'Tom' AND major = 'undecided';
+```
+
+---
+
+## Basic Queries
+
+running some command like this will only return the selected attribute for each entry in the table:
+
+```sql
+SELECT name
+FROM student;
+```
+
+This will only return the name of each student in the table.
+
+To select more than one attribute, you can just separate between them with a comma:
+
+```sql
+SELECT name, major
+FROM student;
+```
+
+Note that you can use the dot notation to specify the attribute as well as the table that you want to retrieve from as follows, and you can also order the returned data or table with ORDER BY:
+
+```sql
+SELECT student.name, student.major
+FROM student
+ORDER BY name;
+```
+
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/e606697b-720e-48a5-9dc2-e10a234065b1/Untitled.png)
+
+Note that you can also specify if you want to get the results in descending or ascending order by adding **DESC** or **ASC** after the attribute you want to order by.
+
+`ORDER BY student_id ASC;`
+
+You can also order by more than one attribute and the result table will get ordered based on them starting with the first one and then based on the second attribute just like a pivot table:
+
+`ORDER BY major, name DESC;`
+
+You can also specify the number of rows you want to get in the result table by using the LIMIT command and adding the number of rows you want:
+
+```sql
+SELECT * 
+FROM student
+LIMIT 2;
+```
+
+And you can also order the result as well at the same time.
+
+You can also select based on a specific criteria just like in deleting and updating using WHERE, and you can also choose which attributes or columns you want to get back:
+
+```sql
+SELECT *
+FROM student
+WHERE major = 'Chemistry';
+```
+
+or `SELECT name, major`
+
+You can use  - -, <, >, ≤, ≥, =, <>, AND, OR
+
+<> is not equal
+
+You can specify if an attribute is among a set of values using IN:
+
+```sql
+SELECT * 
+FROM student
+WHERE name IN ('Claire', 'Kate', 'Mike');
+```
+
+You can also combine more than one selection criteria:
+
+`WHERE major IN (’Biology’, ‘Chemistry’) AND student_id > 2;`
+
+---
+
+## Company Database Into
+
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/d6992fcf-d308-43f1-8cd7-25b31c0b18a0/Untitled.png)
+
+You can find the SQL code for this database [here](https://www.mikedane.com/databases/sql/creating-company-database/). But there are a couple of things that we should take into consideration:
+
+- When the foreign key points to another table and this table does not yet exist, we should just specify the datatype of that table’s primary key, so for example, if you look on when we defined the employee table, the branch table did not exist yet so we sat the branch_id to INT:
+    - `branch_id INT`
+- This is how you define a foreign key in a table:
+    - `FOREIGN KEY(mgr_id) REFERENCES employee(emp_id) ON DELETE SET NULL`
+- After the other table is created, we can then alter or update it to have our foreign key pointing to that table.
+- Since a composite key is a combination of more than one foreign key, this is how we define it since the foreign keys together form the primary key to our table:
+
+```sql
+PRIMARY KEY(emp_id, client_id),
+FOREIGN KEY(emp_id) REFERENCES employee(emp_id) ON DELETE CASCADE,
+FOREIGN KEY(client_id) REFERENCES client(client_id) ON DELETE CASCADE
+```
+
+- When we start adding data, if the data we are referencing via the foreign key is still not added yet, we should set it to Null and then we alter the table after we update the other table.
+
+---
