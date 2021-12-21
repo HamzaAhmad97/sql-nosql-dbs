@@ -443,3 +443,188 @@ WHERE birth_date LIKE '____-10%';
 The under score will match with any single character until we reach the month which should be 10 or October.
 
 ---
+
+## Union
+
+The idea behind union is to combine the results of to SELECT statements into one.
+
+Example: find a list of employee and branch names:
+
+```sql
+SELECT first_name 
+FROM employee;
+
+SELECT branch_name 
+FROM branch;
+```
+
+to combine the results of both queries we can use the keyword UNION 
+
+```sql
+SELECT first_name 
+FROM employee
+UNION
+SELECT branch_name 
+FROM branch;
+```
+
+Note that you should have the same number of columns in both statements to get the result right
+
+For example, if the first query has two columns, this won’t work and will result in an error.
+
+```sql
+SELECT first_name, last_name
+FROM employee
+UNION
+SELECT branch_name 
+FROM branch;
+```
+
+They also should have the same datatype too.
+
+you might use the AS keyword in the first query to name the resulting columns since it will take it from the first one by default.
+
+Example: find a list of all clients and branch supplier’s names:
+
+```sql
+SELECT client_name , branch_id
+FROM client 
+UNION 
+SELECT supplier_name, branch_id 
+FROM branch_supplier
+```
+
+since both tables, client and branch_supplier have the branch_id fields, it might be useful to be able to separate between them by using the dot notation:
+
+```sql
+SELECT client_name , client.branch_id
+FROM client 
+UNION 
+SELECT supplier_name, branch_supplier.branch_id 
+FROM branch_supplier
+```
+
+Example: find all the money spent or earned by the company:
+
+```sql
+SELECT salary
+FROM employee 
+UNION
+SELECT total_sales 
+FROM works_with;
+```
+
+---
+
+## Joins
+
+Used to combine rows from different tables based on a column that is shared between them.
+
+let us start by inserting a row to the branch table, adding the branch Buffalo with manager id and manager start date set to Null
+
+Example: find all branches and the names of their managers 
+
+```sql
+SELECT employee.emp_id, employee.first_name, branch.branch_name
+FROM employee
+JOIN branch 
+ON employee.emp_id = branch.mgr_id
+```
+
+note that we usually do not select columns from different tables but since we are actually joining, we can do that
+
+Also, note that the employee id is shared among the employee table and the branch table thus the join 
+
+This simply means that we joined both tables for the employees that area actually managers of some branches (when the manager id is equal to the employee id)
+
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/f4d17422-4fc7-4a03-818d-7caf0bb2ba06/Untitled.png)
+
+This is called inner join.
+
+We also have left join using the keyword LEFT JOIN
+
+```sql
+SELECT employee.emp_id, employee.first_name, branch.branch_name
+FROM employee
+LEFT JOIN branch 
+ON employee.emp_id = branch.mgr_id
+```
+
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/4c37aa2f-d730-469d-9c4d-2e00436da2be/Untitled.png)
+
+here we got all the employees in the employees table even when they do not have a matching manger id, but they get Null (only matching rows from the right table are returned or give value)
+
+Right join does the opposite, it will return the branch name, but null for the manager or employee name since it does not match in the left table
+
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/9c5879ec-06d6-4ef9-a89e-778b5a31808f/Untitled.png)
+
+In the left join we got all the employees but in the right join we got all the branches 
+
+There is also the full outer join which is like a combination of left and right joins but it is not already there in SQL.
+
+---
+
+## Nested Queries
+
+using multiple SELECT statements to get the info you want, when you get  a bit more specific 
+
+ Example: find the names of all employees who have sold over 30000 to a single client 
+
+```sql
+SELECT works_with.emp_id 
+FROM works_with 
+WHERE works_with.total_sales > 30000;
+-- this will give us the ids of all the employees who have sold more than 30000
+
+-- So what we can do is the following:
+SELECT employee.first_name, employee.last_name
+FROM employee
+WHERE employee.emp_id IN (SELECT works_with.emp_id 
+	FROM works_with 
+	WHERE works_with.total_sales > 30000
+);
+-- this will return the first name and the last name of Micael Scott and Stanley
+```
+
+Example: Find all clients who are handled by the branch that Michael Scott manages, assume you know Michael’s ID
+
+```sql
+SELECT client.client_name
+FROM client
+WHERE client.branch_id = (
+	SELECT branch.branch_id 
+	FROM branch
+	WHERE branch.mgr_id = 102
+	LIMIT 1 -- if you want only one branch 
+);
+```
+
+all of this only means that we are using the results of one query in another query 
+
+---
+
+## On Delete
+
+we have on delete set null and on delete cascade 
+
+consider when we were defining the schema for the branch table:
+
+`FOREIGN KEY(mgr_id) REFERENCES employee(emp_id) ON DELETE SET NULL`
+
+Now when we delete an employee from the employees table, every foreign key in other tables like the branch table will have its manger id corresponding to that employee set to Null, and the result will look something like this 
+
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/1810997b-7b2e-459b-a12c-9a59988ca741/Untitled.png)
+
+On delete cascade will remove the corresponding row entirely from the table with the corresponding attribute value, for example, consider defining the schema for the branch_supplier table:
+
+`FOREIGN KEY(branch_id) REFERENCES branch(branch_id) ON DELETE CASCADE` 
+
+For example, the branch_supplier has a composite key, one of the foreign keys in this composite key is the branch id, so deleting one of the branches will get the row in the branch supplier table to get deleted entirely from the table and not set to null
+
+this makes sense in some cases especially when it comes to composite keys since they are a combination of two foreign keys so we can not set them to null but it is actually better to delete the entire row 
+
+---
+
+## Triggers
+
+are basically blocks of SQL that define actions that will get triggered on certain actions we perform, like for example, when something is deleted or when something is added to a certain table
